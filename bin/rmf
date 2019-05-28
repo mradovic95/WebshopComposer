@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+#
+# rmf is used to remove specified file if it exist
+#
+
+if [ -f "$1" ]; then
+    rm -rf "$1"
+fi

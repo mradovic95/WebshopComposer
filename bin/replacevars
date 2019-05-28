@@ -1,0 +1,29 @@
+#!/bin/bash
+set -e
+
+#
+# Replace a list of vars in specified file.
+# Vars are seperated with coma (,) if there is more vars.
+# E.g. MOZZ_IP,MOZZ_IP2 etc.
+#
+# Placeholder will look like @@MOZZ_IP@@
+#
+
+# $1 a list of vars to replace in specified target file
+# $2 specified target file
+
+OLDIFS=$IFS
+IFS=','
+
+# Vars array will hold all vars
+read -a vars <<< $1
+
+# Reset IFS
+IFS=$OLDIFS
+
+for var in $vars; do
+	varvalue=$( eval "echo \${$var}" )
+	echo "Placeholder @@$var@@ (@$2) will be replaced with value: $varvalue"
+
+	sed -i "s/@@$var@@/$varvalue/g" "$2"
+done

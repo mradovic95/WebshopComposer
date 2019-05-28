@@ -1,0 +1,72 @@
+#!/bin/bash
+set -e
+
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# import environment
+source "$CURRENT_DIR/env.sh"
+
+# prints usage
+# $1 exit value
+usage() {
+cat <<EOF
+
+	Command adds an entry to the /etc/hosts file.
+
+    addhost [ -h ] -i IP_ADDRESS -n HOST_NAME -d DESCRIPTION
+
+    where options are:
+
+    -h, prints help
+	-i, IP Address that we want to put in /etc/hosts file, eg. 192.168.100.100
+	-n, name of the host, eg. test.mozzartbet.com
+	-d, Description of the host, eg. Some test comupter used for load testing.
+
+EOF
+exit $1
+}
+
+OPTERR=0
+while getopts ":i:n:d:h" options
+do
+    case $options in
+        i) IP=$OPTARG
+        ;;
+        n) HOST_NAME=$OPTARG
+        ;;
+		d) DESC=$OPTARG
+		;;
+		h) usage 0
+		;;
+    esac
+done
+# getopts will take his params, but rest of them ara available after shifting is done.
+shift $(($OPTIND - 1))
+
+if [ -z "$IP" ]; then
+	echo "IP is not set"
+	usage 1
+fi
+
+if [ -z "$HOST_NAME" ]; then
+	echo "Host name is nost set."
+	usage 1
+fi
+
+if [ -z "$DESC" ]; then
+	echo "Description is not set."
+	usage 1
+fi
+
+ENTRY="${IP} ${HOST_NAME}"
+ENTRY_EXISTS=$( cat /etc/hosts | grep -E "^${ENTRY}$" &>/dev/null && echo "true"  || echo "false" )
+
+if [ "${ENTRY_EXISTS}" == "true" ]; then
+	echo "Entry '$ENTRY' already exists in /etc/hosts file."	
+else
+	echo "# $DESC" >> /etc/hosts
+	echo "$ENTRY" >> /etc/hosts
+
+	echo "Entry '$ENTRY ($DESC)' is added to the host file."
+fi
+

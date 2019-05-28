@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+
+# Returns current directory of the calling script
+CALLING_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
+echo $CALLING_SCRIPT_DIR

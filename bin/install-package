@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+apt-get install --yes --force-yes $*
+if [ $? != 0 ]; then
+   echo "Installation failed while was installing: $*"
+   exit 2
+fi

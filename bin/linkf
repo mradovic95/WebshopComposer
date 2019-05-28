@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+#
+# lnf is used to create sym links, as ln -s would do. 
+# However, lnf will remove a link if exists, and it will place new one.
+#
+
+if [ -L "$2" ]; then
+    echo "WARNING: Link '$2' already exists. It will be deleted."
+    rm -f "$2"
+fi
+
+ln -s "$1" "$2"

@@ -1,0 +1,154 @@
+#!/bin/bash
+set -e
+
+#
+# Set/export variable that will be used in later processing.
+# There is three ways to export variable:
+# 1) from command line (highest priority)
+# 2) as default value, as param to this command (lower priority)
+# 3) if non of above is set, then setvar swithces to interactive mode,
+# asking for user interaction.
+#
+# Author: Marko Jovicic <marko.jovicic@mozzartbet.com>
+#
+
+# Read the options
+#options=`/usr/local/Cellar/gnu-getopt/1.1.6/bin/getopt -o n:d:v:e -l name:,desc:,default-value:,export -- "$@"`
+options=`getopt -o n:d:v:eo:a -l name:,desc:,default-value:,export,output:,append -- "$@"`
+eval set -- "$options"
+
+usage() {
+
+echo ""
+echo "$2"
+
+cat <<EOF
+
+	setvar -n VAR_NAME -d SHORT_DESC [ -v DEFAULT_VALUE ] [ -e ] [ -o OUTPUT_FILE ] 
+
+	where options are:
+
+	-n, --name
+		is variable name
+	-d, --desc 
+		is short variable description
+	-v, --default-value 
+		(optional) default value if u want to specify.
+	-e, --export
+		(optional) if this option is present then it will print export command for its variable. Short description is printed above export. This option will just print out state as it is and will exit silently.
+		It will not ask user for input, and it will discard -o option if it is present.
+	
+	-o, --output
+		output export command in specified file. It will be appended.
+
+EOF
+
+exit $1
+}
+
+#
+# Export variables.
+# TODO: Intented to work per module, module scope
+#
+# $1 variable name
+# $2 variable value
+_export() {
+	export $1="$2"
+	VALUE="$2"
+}
+
+# Eechoes to stdout export command
+_printExport() {
+	# Export things as they are
+	echo "# $DESC"
+	echo "export $NAME=\"$VALUE\""
+	echo ""
+}
+
+#
+# Used to interactively set up variable value.
+# This means that setvar doesn't know nothing
+# about specified variable and it will be
+# initialized right now. (it will be exported)
+#
+# $1 var name
+# $2 var desc
+_setvar() {
+	input=
+	while [[ $input = "" ]]; do
+		echo ""
+		echo "Variable \`$1' is not set."
+		echo "\`$1': $2"
+		echo "Please enter value for \`$1' variable:"
+		read input
+	done
+
+	_export "$1" "$input"
+}
+
+# Extract options and their arguments into variables
+while true ; do
+	case "$1" in
+		-n|--name)
+			case "$2" in
+				"") shift 2 ;;
+				*) NAME="$2" ; shift 2 ;;
+			esac ;;
+		-d|--desc)
+			case "$2" in
+				"") shift 2 ;;
+				*) DESC="$2"; shift 2 ;;
+			esac ;;
+		-v|--default-value)
+			case "$2" in
+				"") shift 2 ;;
+				*) VALUE="$2" ; shift 2 ;;
+			esac ;;
+		-e|--export) EXPORT=1 ; shift ;;
+		-o|--output)
+			case "$2" in
+				"") shift 2 ;;
+				*) OUTPUT_FILE="$2" ; shift 2 ;;
+			esac ;;
+
+		--) shift ; break ;;
+		*) echo "Internal error!" ; exit 1 ;;
+	esac
+done
+
+# Checking required params
+if [ -z "$NAME" ]; then
+	usage 1 "Variable name is required."
+fi
+if [ -z "$DESC" ]; then
+	usage 1 "Variable description is required."
+fi
+
+# If export is requested just print it out and exit
+if [ "$EXPORT_VARS_ONLY" == "1" ]; then
+	EXPORT=1
+fi
+if [ "$EXPORT" == "1" ]; then
+	_printExport
+	exit 0
+fi
+
+#
+# Setting up variables
+#
+
+# Check to see if someone already exported this var
+exist=$(eval "if [ -n \"\${${NAME}+1}\" ]; then echo 1; else echo 0; fi")
+if [ "$exist" == "1" ]; then
+	VALUE=$(eval "echo \${$NAME}")
+	echo "Warning: Variable \`$NAME' is set from top, and its value is: \`$VALUE'"
+elif [ -n "${VALUE+1}" ]; then
+	export $NAME="$VALUE"
+else
+	_setvar "$NAME" "$DESC"
+fi
+
+if [ ! -z "$OUTPUT_FILE" ]; then
+	_printExport &>> "$OUTPUT_FILE"
+fi
+

@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+    - "27017:27017"
+    networks:
+    - webshop
+  activemq:
+    image: webcenter/activemq
+    networks:
+    - webshop
+  postgres:
+    image: postgres
+    volumes:
+    - $PWD/init/:/docker-entrypoint-initdb.d
+    ports:
+    - "5432:5432"
+    environment:
+    - POSTGRES_PASSWORD=test
+    networks:
+    - webshop
+  pgadmin:
+    image: meedan/pgadmin
+    volumes:
+    - $PWD/pgadmin4/data:/home/pgadmin/.pgadmin
+    ports:
+    - "5050:5050"
+    depends_on:
+    - postgres
+    networks:
+    - webshop
+  products:
+    image: webshop/products
+    environment:
+    - SPRING_PROFILES_ACTIVE=composer
+    depends_on:
+    - mongo
+    - activemq
+    networks:
+    - webshop
+  users:
+    image: webshop/users
+    environment:
+    - SPRING_PROFILES_ACTIVE=composer
+    depends_on:
+    - postgres
+    networks:
+    - webshop
+  payment:
+    image: webshop/payment
+    environment:
+    - SPRING_PROFILES_ACTIVE=composer
+    depends_on:
+    - postgres
+    networks:
+    - webshop
+  orders:
+    image: webshop/orders
+    environment:
+    - SPRING_PROFILES_ACTIVE=composer
+    depends_on:
+    - postgres
+    networks:
+    - webshop
+  apigateway:
+    image: webshop/apigateway
+    ports:
+      - "8084:8084"
+    environment:
+    - SPRING_PROFILES_ACTIVE=composer
+    networks:
+    - webshop
+networks:
+  webshop:
+

@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# import environment
+source "$CURRENT_DIR/env.sh"
+
+# Prints module info
+printModuleInfo() {
+    echo ""
+    echo "#"
+    echo "# Module $CURRENT_MODULE"
+    echo "#"
+    echo ""
+}
+
+export CURRENT_MODULE="$1"
+
+# Init vars
+if [ -f "$ROOT_DIR/modules/$1/vars.sh" ]; then
+    printModuleInfo
+
+    # current module vars is file in which all variables will be ready to export them
+    # this is done because of subshell can not export vars to parent shell. (workaround)
+    export CURRENT_MODULE_VARS="$ROOT_DIR/modules/$CURRENT_MODULE/module.config"
+    echo "# `date +"%d.%m.%Y. %T"`" > "$CURRENT_MODULE_VARS"
+
+    "$ROOT_DIR/modules/$1/vars.sh" 
+    . "$CURRENT_MODULE_VARS"
+fi
+if [ "$EXPORT_VARS_ONLY" == "1" ]; then
+    # only vars export is request so module init will not happen this time.
+    exit 0
+fi
+
+printModuleInfo
+"$ROOT_DIR/modules/$1/init.sh"
+
+echo "# Module initialized: $1"
+echo ""

@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+#
+# cpf is used to copy file from template's files directory to specifed target location
+#
+
+# Holds all vars to be replaces in targe file
+VARS=
+
+OPTERR=0
+while getopts ":v:" options
+do
+	case $options in
+		v) VARS=$OPTARG
+		;;
+	esac
+done
+
+# getopts will take his params, but rest of them ara available after shifting is done
+shift $(($OPTIND - 1))
+
+echo "Copying '$1' to '$2'"
+cp -rf "$ROOT_DIR/modules/$CURRENT_MODULE/files/$1" "$2"
+
+# Replace vars in target file
+if [ ! -z "$VARS" ]; then
+	replacevars "$VARS" "$2"
+fi
+

@@ -1,0 +1,50 @@
+#!/bin/bash
+set -e
+
+CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# import environment
+source "$CURRENT_DIR/env.sh"
+
+# prints usage
+# $1 exit value
+usage() {
+cat <<EOF
+
+    initmanifest [ -e ] [ -h ] MANIFEST_NAME
+
+    where options are:
+
+    -h, prints help
+    -e, execute 'export EXPORT_VARS_ONLY=1' which will indicate that 'initmodule' will run through all modules and export its variables at stdout. No actual module init will happen.
+    
+    MANIFEST_NAME is the name of manifest file from manifest directory without .sh suffix. (e.g. 'serbia-setup' means that manifest file exists at 'manifest/serbia-setup.sh')
+
+EOF
+exit $1
+}
+
+OPTERR=0
+while getopts ":eh" options
+do
+    case $options in
+        e) export EXPORT_VARS_ONLY=1
+        ;;
+        h) usage 0
+        ;;
+    esac
+done
+# getopts will take his params, but rest of them ara available after shifting is done.
+shift $(($OPTIND - 1))
+
+
+# Manifest file name from manifest folder, without 'sh' sufix (e.g. webserver-sdeploy)
+# TODO - check if this manifest file exists?
+MANIFEST_INIT="$1"
+
+START_TIME=$(date +"%d.%m.%Y. %T")
+
+echo "# Starting manifest: ${MANIFEST_INIT}.sh"
+"$ROOT_DIR/manifest/${MANIFEST_INIT}.sh"
+
+echo "# Manifest: ${MANIFEST_INIT}.sh successfully executed ($START_TIME - `date +"%d.%m.%Y. %T"`)"

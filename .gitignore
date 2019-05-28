@@ -1,0 +1,9 @@
+*.swp
+Dockerfile
+
+.idea
+*.iml
+
+*~
+
+module.config

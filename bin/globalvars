@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+# Prints out all global variables
+echo "Mozzart Web library MOZZ_WEB_LIB=$MOZZ_WEB_LIB"
+echo "Root modules dir MOZZ_WEB_MODULES_DIR=$MOZZ_WEB_MODULES_DIR"
+echo "Bin dir MOZZ_WEB_BIN=$MOZZ_WEB_BIN"
